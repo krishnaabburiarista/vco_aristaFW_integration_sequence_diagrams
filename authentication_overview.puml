@@ -1,0 +1,35 @@
+@startuml
+actor Users as user
+box "VCO UI"
+participant "Arista FW UI" as arista_fw_ui
+end box
+box "VCO Backend"
+control "Nginx" as nginx
+participant "IAM" as IAM
+end box
+box "Arista FW"
+participant "Arista FW Auth Server" as arista_fw_auth_server
+participant "Arista FW Backend" as arista_fw_backend
+participant "VCO Public Keys" as vco_public_keys
+end box
+user --> nginx : Arista FW  API request \n https://vcp/api/fw/api/...
+activate nginx #LightBlue
+nginx --> IAM : AuthN/AuthZ
+activate IAM #LightBlue
+IAM -> IAM: Validate Session
+IAM -> IAM : Generate signed JWT
+IAM -> nginx: Signed JWT 
+deactivate IAM
+nginx -> arista_fw_auth_server: Forward request\n headers \n    -x-vco-auth: VCO-JWT
+activate arista_fw_auth_server #DarkBlue
+arista_fw_auth_server -> arista_fw_auth_server : Read VCO UUID from JWT
+arista_fw_auth_server -> vco_public_keys : Fetch VCO public key
+arista_fw_auth_server -> arista_fw_auth_server : validate JWT
+arista_fw_auth_server -> arista_fw_backend : Process request
+arista_fw_backend -> arista_fw_auth_server
+arista_fw_auth_server -> nginx: response
+deactivate arista_fw_auth_server
+nginx -> user: response
+deactivate nginx
+@enduml 
+
