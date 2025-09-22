@@ -1,0 +1,31 @@
+@startuml
+actor Users as user
+box "VCO UI"
+participant "SDWAN UI" as sdwan_ui
+end box
+box "VCO"
+participant "portal" as portal
+participant "Arista FW consumer" as consumer
+participant "kafka/redis streams" as kafka
+participant "mysql" as mysql
+end box
+box "Arista FW"
+participant "Arista FW Backend" as arista_fw_backend
+end box
+user --> portal : activate edgge
+activate portal #LightBlue
+portal -> portal : process the request
+portal -> kafka: Add message to topic AristaFW \n with details of edge
+portal -> user : Response
+deactivate portal
+activate consumer #LightBlue
+consumer <- kafka : Consume & validate new message
+consumer -> arista_fw_backend: Send request to create edge
+arista_fw_backend -> arista_fw_backend: Create enterprise if does not exist
+arista_fw_backend -> arista_fw_backend: Create appliances
+arista_fw_backend -> consumer: Response (assuming this includes enterpriseID always)
+consumer -> mysql: store enterpriseID in VELOCLOUD_LICENSES table
+deactivate consumer
+
+@enduml 
+

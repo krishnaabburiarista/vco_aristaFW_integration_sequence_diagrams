@@ -3,7 +3,7 @@ actor Users as user
 box "VCO UI"
 participant "Arista FW UI" as arista_fw_ui
 end box
-box "VCO Backend"
+box "VCO"
 control "Nginx" as nginx
 participant "IAM" as IAM
 end box
