@@ -1,0 +1,24 @@
+@startuml
+box "VCO"
+participant "kafka/redis streams" as kafka
+participant "Arista FW consumer" as consumer
+participant "IAM" as IAM
+participant "mysql" as mysql
+end box
+box "Arista FW"
+participant "Arista FW Backend" as arista_fw_backend
+end box
+activate consumer #LightBlue
+consumer <- kafka : Consume new message
+consumer -> consumer : Validate if enterprise has ETM license
+consumer <-> IAM : Generate Signed JWT
+consumer -> consumer : Fetch List of edges \n belonging to profile
+consumer -> arista_fw_backend: Send request to create edges with auth header
+arista_fw_backend -> arista_fw_backend: Create enterprise if does not exist
+arista_fw_backend -> arista_fw_backend: Create appliances
+arista_fw_backend -> consumer: Response \n (assuming this includes enterpriseID always)
+consumer -> mysql: store enterpriseID in VELOCLOUD_LICENSES table \n if does not exist
+deactivate consumer
+
+@enduml 
+

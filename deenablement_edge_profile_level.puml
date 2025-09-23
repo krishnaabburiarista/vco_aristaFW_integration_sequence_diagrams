@@ -1,0 +1,30 @@
+@startuml
+actor Users as user
+box "VCO UI"
+participant "SDWAN UI" as sdwan_ui
+end box
+box "VCO"
+participant "portal" as portal
+participant "Arista FW consumer" as consumer
+participant "kafka/redis streams" as kafka
+participant "mysql" as mysql
+end box
+box "Arista FW"
+participant "Arista FW Backend" as arista_fw_backend
+end box
+user --> portal : Disable ETM in edge profile
+activate portal #LightBlue
+portal -> portal : process the request
+portal -> kafka: Add message to topic AristaFW \n with details of enterprise
+portal -> user : Response
+deactivate portal
+activate consumer #LightBlue
+consumer <- kafka : Consume & validate new message
+consumer -> consumer : Collect list of edges within the profile
+consumer -> arista_fw_backend: Send request to delete appliances
+arista_fw_backend -> arista_fw_backend: Delete appliances
+arista_fw_backend -> consumer: Response 
+deactivate consumer
+
+@enduml 
+
