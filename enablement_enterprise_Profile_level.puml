@@ -1,0 +1,38 @@
+@startuml
+actor Users as user
+box "VCO UI"
+participant "SD WAN UI" as sdwan_ui
+end box
+box "VCO"
+participant "portal" as portal
+participant "Arista FW consumer" as consumer
+participant "Redis streams" as redis
+participant "mysql" as mysql
+end box
+box "Arista FW"
+participant "Arista FW Backend" as arista_fw_backend
+end box
+box "Edge"
+participant "Edge" as edge
+end box
+user --> portal : Enable Arista FW \n enterprise profile level \n with arista profile id
+activate portal #LightBlue
+portal -> portal : process the request
+portal -> redis: Add message to topic AristaFW \n with details of enterprise profile
+portal -> user : Response
+edge -> portal : Heartbeat
+portal -> edge : arista fw enabled & arista profile id
+portal -> redis: Add message to topic AristaFW \n with details of enterprise profile
+portal -> user : Response
+deactivate portal
+activate consumer #LightBlue
+consumer <- redis : Consume & validate new message
+consumer -> consumer : Compile list of edges under the profile
+consumer -> arista_fw_backend: Send request to create edges
+arista_fw_backend -> arista_fw_backend: Create appliances
+arista_fw_backend -> consumer: Response (with list of edges and associated appliance ids)
+consumer -> mysql: store applianceId in EDGE_PROPERTIES table
+deactivate consumer
+
+@enduml 
+

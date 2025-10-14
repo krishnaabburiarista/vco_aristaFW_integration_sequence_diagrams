@@ -1,0 +1,23 @@
+@startuml
+box "VCO"
+participant "kafka/redis streams" as kafka
+participant "Arista FW consumer" as consumer
+participant "IAM" as IAM
+participant "mysql" as mysql
+end box
+box "Arista FW"
+participant "Arista FW Backend" as arista_fw_backend
+end box
+activate consumer #LightBlue
+consumer <- kafka : Consume new message
+consumer -> consumer : Validate if enterprise has arista fw license
+consumer <-> IAM : Generate Signed JWT
+consumer -> consumer : Fetch List of edges \n belonging to profile
+consumer -> arista_fw_backend: Send request to create edges with auth header
+arista_fw_backend -> arista_fw_backend: Create appliances
+arista_fw_backend -> consumer: Response \n (list of edges with appliance ids)
+consumer -> mysql: store applianceId in EDGE_PROPERTIES table
+deactivate consumer
+
+@enduml 
+

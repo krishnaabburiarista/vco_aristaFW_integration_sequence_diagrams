@@ -1,0 +1,21 @@
+@startuml
+box "VCO"
+participant "kafka/redis streams" as kafka
+participant "Arista FW consumer" as consumer
+participant "IAM" as IAM
+participant "mysql" as mysql
+end box
+box "Arista FW"
+participant "Arista FW Backend" as arista_fw_backend
+end box
+activate consumer #LightBlue
+consumer <- kafka : Consume new message
+consumer -> consumer : Validate if enterprise has arista fw license
+consumer <-> IAM : Generate Signed JWT
+consumer -> arista_fw_backend: Send request to modify appliance with auth header
+arista_fw_backend -> arista_fw_backend: Modify appliance
+arista_fw_backend -> consumer: Response 
+deactivate consumer
+
+@enduml 
+

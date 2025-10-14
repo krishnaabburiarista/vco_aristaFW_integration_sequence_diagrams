@@ -1,0 +1,22 @@
+@startuml
+box "VCO"
+participant "kafka/redis streams" as kafka
+participant "Arista FW consumer" as consumer
+participant "IAM" as IAM
+participant "mysql" as mysql
+end box
+box "Arista FW"
+participant "Arista FW Backend" as arista_fw_backend
+end box
+activate consumer #LightBlue
+consumer <- kafka : Consume new message
+consumer <-> IAM : Generate Signed JWT
+consumer -> consumer : Fetch List of profiles \n belonging to enterprise
+consumer -> consumer : Fetch List of edges \n belonging to profile
+consumer -> arista_fw_backend: Send request to delete edges with auth header
+arista_fw_backend -> arista_fw_backend: Delete appliances
+arista_fw_backend -> consumer: Response
+deactivate consumer
+
+@enduml 
+
